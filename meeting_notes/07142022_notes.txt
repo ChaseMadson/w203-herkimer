@@ -1,0 +1,33 @@
+Notes: 07/14/2022 1800 PST
+
+	Homework 11: 
+		- Comms in Slack. Do individually and discuss on Sunday (07/17/2022). 
+
+	Proposal:
+		- Get together Sunday (07/17/2022) to discuss and put together the proposal. 
+		- Put together some sample answers and compile them all together on Sunday. 
+
+	Dataset options:
+		- Kaggle Datasets
+		- Tidy Tuesday Datasets
+		- US Courts Dataset (Chase's Recommendation). Harder to clean, but has interesting data.
+		- Indiviudally explore datasets and come up with a research question. Consolidate ideas on Sunday (07/17/2022)
+		- Comms in Slack. Share any data dictionaries that we find about the datasets.
+		- Does this have to do with the prompt 'What Makes a Product Successful?' We might have to use this to guide our dataset collection.
+		- Data is split into tha exploration set and the confirmation set.
+			- 30% of data into exploration set. Make sure datasets have at least 100-200 rows of data. 
+			  State model assumptions and make decisions about which variables are appropriate using the exploration set.
+			- Other 70% of the data (confirmation set) should be used to run the final regression on.
+			- Explore and develop model on 30%, run on the other 70%. 
+	
+	Within-Team Review:
+		- How did we contribute?
+		- What did we contribute?
+
+	Action Items:
+		- Make shared Google Doc for drafts / brain dumps
+
+
+Follow-Up Meeting: 07/17/2022 1100 PST
+
+
