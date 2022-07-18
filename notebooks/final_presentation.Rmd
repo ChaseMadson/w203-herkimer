@@ -1,0 +1,23 @@
+---
+title: "[TITLE OF PRESENTATION]"
+subtitle: 'Lab 2: What Makes a Product Successful? - W203 Section 8'
+author: 'Team Herkimer: Rick Chen, Chase Madson, Maria Manna, Jash Sompalli'
+date: '`r format(Sys.time(), "%b %d, %Y")`'
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../reports';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), 
+                        out_dir, 'final_presentation.pptx')) })
+output: powerpoint_presentation
+---
+
+# Slide 1
+
+# Slide 2
+
+# Slide 3
+
+# Slide 4
+
+# Slide 5
