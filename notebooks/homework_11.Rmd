@@ -1,0 +1,108 @@
+---
+title: 'Part 1: Explanation Practice (Homework 11)'
+subtitle: 'Lab 2: What Makes a Product Successful? - W203 Section 8'
+author: 'Team Herkimer: Rick Chen, Chase Madson, Maria Manna, Jash Sompalli'
+date: '`r format(Sys.time(), "%b %d, %Y")`'
+knit: (function(inputFile, encoding) { 
+      out_dir <- '../reports';
+      rmarkdown::render(inputFile,
+                        encoding=encoding, 
+                        output_file=file.path(dirname(inputFile), 
+                        out_dir, 'homework_11.pdf')) })
+output:
+  pdf_document:
+    number_sections: true
+    extra_dependencies: ['tikz', 'pgf']
+---
+
+# Omitted Variables
+
+**Question**: *An omitted variable is whether the company has high value assets that might be attractive targets for criminals. Argue whether the omitted variable bias is towards zero or away from zero (5 sentences max).*
+
+**Response**: Since the assets of a company are not accounted for in the model, we are likely omitting an important variable that explains the variation around security breaches. It is reasonable to assume criminals are more strongly motivated to breach a company when they believe there are valuable assets to be pilfered, and thus we would expect the number of breaches to be greater for these companies with high value assets. Companies with high value assets are likely the ones investing the most into cybersecurity training, so the coefficient for training hours included in the model is absorbing this positive association.
+
+Thus, the omission of a company's assets is likely producing omitted variable bias in our model tilting our coefficients in the positive direction away from zero. If we were to correct this by including a "High Value Assets" variable, we expect to see a positive and statistically significant coefficient associated with it and it's possible we actually see the coefficient for training hours become negative (i.e., flipping the slope from positive to negative).
+
+# Reverse Causality
+
+**Question**: *Explain why there is a possibility of reverse causality. Argue whether the direction of bias is towards zero or away from zero (5 sentences max).*
+
+**Response**: Companies with high value assets are likely the ones experiencing the most attention from cybercriminals, and so to remedy this they use their greater means to invest in cybersecurity training. The causal sequence might look like the following: 
+
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric}
+\begin{center}
+\begin{tikzpicture}
+  % nodes %
+  \node[ellipse, draw, align=center] (A) {Org has\\valuable\\assets};
+
+  \node[ellipse, draw, right=0.25 of A, align=center] (B) {Org becomes\\target of\\cybercrime};
+
+  \node[ellipse, draw, right=0.25 of B, align=center] (C) {In response,\\Org must perform\\effective mitigation\\to protect assets};
+
+  \node[ellipse, draw, right=0.25 of C, align=center] (D) {Org invests in\\cybersecurity\\training};
+  
+  \node[ellipse, draw, right=0.25 of D, align=center] (E) {Relative drop\\in security\\breaches};
+
+  \node[ellipse, draw, below=0.5 of C, align=center] (Y) {Number of\\Security\\Breaches};
+  
+  % edges %
+  \draw[->] (A) -- (B);
+  \draw[->] (B) -- (C);
+  \draw[->] (C) -- (D);
+  \draw[->] (D) -- (E);
+  \draw[->] (B) edge node[draw, fill=white, circle]{+} (Y);
+  \draw[->] (E) edge node[draw, fill=white, circle]{-} (Y);
+\end{tikzpicture}
+\end{center}
+
+Since these organizations are investing in training as a response to being targeted, we expect the direction of bias introduced into the model to be away from zero in the positive direction. Our colleague is misinterpreting a reverse causality in these model results to suggest:
+
+\begin{center}
+\begin{tikzpicture}
+  % nodes %
+  \node[ellipse, draw, align=center] (A) {Org invests in\\cybersecurity\\training};
+
+  \node[ellipse, draw, right=1 of A, align=center] (B) {Relative rise\\in security\\breaches};
+  
+  \node[ellipse, draw, right=1.5 of B, align=center] (C) {Number of\\Security\\Breaches};
+  
+  % edges %
+  \draw[->] (A) -- (B);
+  \draw[->] (B) edge node[draw, fill=white, circle]{+} (C);
+\end{tikzpicture}
+\end{center}
+
+To make matters worse, if the Cybersecurity Training Hours variable is a total number of hours rather than per capita, it could also be inadvertently measuring companies with more employees who are likely to be companies with more assets to begin with.
+
+# Outcome on Right Hand Side
+
+**Question**: *Explain why there is an outcome variable on the right hand side. Argue whether removing it would make the coefficient on Cybersecurity Training Hours move up or down (5 sentences max).*
+
+**Response**: Emails Encrypted is a reflection of how well employees at large comply internalize good cybersecurity practices, which itself is an outcome of having received adequate cybersecurity training. Removing the Emails Encrypted variable will make the coefficient on cybersecurity training hours *move down* since it is currently absorbing much of the positive effect that the training has on employees. Much of the impact of having *well-trained* employees is not being counted towards the coefficient for training hours if we are additionally accounting for the best practices directly through Emails Encrypted. 
+
+We can imagine Emails Encrypted as a intermediary step we add to the above causal chart between training and relative drop in breaches:  
+
+\begin{center}
+\begin{tikzpicture}
+  % nodes %
+  \node[ellipse, draw, align=center] (A) {Employees receive\\cybersecurity\\training};
+  
+  \node[ellipse, draw, right=0.5 of A, at=(A.east), align=center] (B) {More employees\\use encrypted\\email};
+  
+  \node[ellipse, draw, right=0.5 of B, align=center] (C) {Relative drop\\in security\\breaches};
+  
+  \node[ellipse, draw, right=1 of C, align=center] (D) {Number of\\Security\\Breaches};
+  
+  % edges %
+  \draw[->] (A) -- (B);
+  \draw[->] (B) -- (C);
+  \draw[->] (C) edge node[draw, fill=white, circle]{-} (D);
+\end{tikzpicture}
+\end{center}
+
+# Conclusion
+
+**Question**: *Provide a one-sentence conclusion addressing the idea that your company should not invest in cybersecurity training.*
+
+**Response**: Let's not get our causes and outcomes mixed up due to this poorly specified regression model - cybersecurity training is an effective and evidence-based method for reducing costly breaches and we would be unwise to forgo it, especially considering the density of high value assets at our company.
