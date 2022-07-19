@@ -20,6 +20,8 @@ Team Herkimer is a data science team for Acme, Inc., the largest used car dealer
 
 At what point(s) does a used car depreciate most dramatically in market value price ($Y$) as a result of its age ($X_1$) and mileage ($X_2$)?
 
+To avoid omitted variable bias, we will consider the potential fixed effects of certain static vehicle attributes: engine size ($X_3$), class ($X_4$), transmission type ($X_5$), fuel type ($X_6$), and mpg ($X_7$). 
+
 # Data Source
 
 The team acquired data on used car listings that was scraped from the web by Kaggle user *ADITYA* and linked here: [**100,000 UK Used Car Data set**](https://www.kaggle.com/datasets/adityadesai13/used-car-dataset-ford-and-mercedes?select=audi.csv)
@@ -28,6 +30,6 @@ We operationalize the market value price of a used vehicle by the listing price 
 
 # Unit of Observation
 
-Each record in our data represents a unique vehicle appearing in an online used car listing; any vehicles that appear more than once in duplicate listings will be removed, with the vehicle's most recent listing be favored.
+Each record in our data represents a unique vehicle appearing in an online used car listing; any vehicles that appear more than once in duplicate listings will be removed, with the most recent listing being favored.
 
 The data was pulled once in 2020 and reflects active listings at the time it was scraped. Vehicles have been limited down to certain manufacturers.
