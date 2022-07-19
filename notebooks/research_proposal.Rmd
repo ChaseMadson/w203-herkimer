@@ -24,7 +24,7 @@ At what point(s) does a used car depreciate most dramatically in market value pr
 
 The team acquired data on used car listings that was scraped from the web by Kaggle user *ADITYA* and linked here: [**100,000 UK Used Car Data set**](https://www.kaggle.com/datasets/adityadesai13/used-car-dataset-ford-and-mercedes?select=audi.csv)
 
-We operationalize the market value price of a used vehicle by the listing price on the advert in pounds sterling ($\textsterling$), stored in the *price* variable. The mileage of a vehicle is reported directly in the **mileage** variable. The age of a vehicle is given indirectly through the vehicle's registration year, reported in the variable **year**.
+We operationalize the market value price of a used vehicle by the listing price on the advert in pounds sterling ($\textsterling$), stored in the variable **price**. The mileage of a vehicle is reported directly in the variable **mileage**. The age of a vehicle is given indirectly through the vehicle's registration year, reported in the variable **year**.
 
 # Unit of Observation
 
