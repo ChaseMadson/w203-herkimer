@@ -12,16 +12,68 @@ knit: (function(inputFile, encoding) {
 output:
   pdf_document:
     number_sections: true
-    extra_dependencies: ['tikz', 'pgf']
+    toc: true
 ---
+
+```{r Setup, include=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+```
+
+
+```{r}
+videos <- 
+  '../data/external/videos.txt' %>% 
+  read_tsv(col_types = 'cciciidii')
+
+```
+
+
+* views: the number of views by YouTube users.
+* rate: This is the average of the ratings that the video received. You may think of this as a proxy for
+video quality. (Notice that this is different from the variable ratings which is a count of the total
+number of ratings that a video has received.)
+* length: the duration of the video in seconds.
+
+$ln(views)=\beta_0+\beta_1rate+\beta_2length$
+
+```{r}
+fit <-
+  lm(data = videos, 
+     formula = log(views) ~ rate + length)
+
+summary(fit)
+
+```
+
 
 # Evaluate the IID assumption.
 
-# Evaluate the No perfect Colinearity assumption.
 
-# Evaluate the Linear Conditional Expectation: assumption.
+# No Perfect Colinearity
 
-# Evaluate the Homoskedastic Errors: assumption.
+```{r, warning=FALSE}
+videos %>% 
+  ggplot(mapping = aes(x = rate, y = length)) + 
+  geom_point()
 
-# Evaluate the Normally Distributed Errors: assumption.
+```
+
+# Linear Conditional Expectation
+
+
+# Homoskedastic Errors
+
+```{r}
+plot(fit, 1)
+```
+
+
+
+# Normally Distributed Errors
+
+```{r}
+plot(fit, 2)
+
+```
 
