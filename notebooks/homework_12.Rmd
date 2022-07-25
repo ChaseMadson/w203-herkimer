@@ -20,7 +20,6 @@ library(tidyverse)
 
 ```
 
-
 ```{r}
 videos <- 
   '../data/external/videos.txt' %>% 
@@ -28,12 +27,9 @@ videos <-
 
 ```
 
-
-* views: the number of views by YouTube users.
-* rate: This is the average of the ratings that the video received. You may think of this as a proxy for
-video quality. (Notice that this is different from the variable ratings which is a count of the total
-number of ratings that a video has received.)
-* length: the duration of the video in seconds.
+-   views: the number of views by YouTube users.
+-   rate: This is the average of the ratings that the video received. You may think of this as a proxy for video quality. (Notice that this is different from the variable ratings which is a count of the total number of ratings that a video has received.)
+-   length: the duration of the video in seconds.
 
 $ln(views)=\beta_0+\beta_1rate+\beta_2length$
 
@@ -46,34 +42,134 @@ summary(fit)
 
 ```
 
+# Evaluate the IID Assumption
 
-# Evaluate the IID assumption.
+For this assumption to be met we expect the data to have been drawn from an independent and identically distributed sampling process. The unit of observation of this data set is a distinct YouTube video, and the creators of this sample of YouTube videos describe their sampling process as follows:
 
+> We consider all the YouTube videos to form a directed graph, where each video is a node in the graph. If a video *b* is in the related video list (first 20 only) of a video *a*, then there is a directed edge from *a* to *b* .... When processing each video, it checks the list of related videos and adds any new ones to the queue.[^1]
 
-# No Perfect Colinearity
+[^1]: From *Dataset for "Statistics and Social Network of YouTube Videos"* <https://netsg.cs.sfu.ca/youtubedata/>
 
-```{r, warning=FALSE}
+By this description, we know that each video was selected due to its relation to a previously selected video included in the sample. There is an explicit correlation between units of observation and a clear violation of the IID assumption, specifically *independence*.
+
+Moreover, the creators state that they began pulling their sample from an "initial set of videos from the list of 'Recently Featured', 'Most Viewed', 'Top Rated', and 'Most Discussed'...", each one of these likely representing a cluster within the population of YouTube videos. This means the first subset of videos comes from one of these four clusters, and then subsequent data was pulled based on how closely related they were to this first subset. Therefore, we have major presence of clustering in our sample in contrast to the population, another violation of the IID assumption.
+
+-   **[Drop?] Age of a video determines views and relatedness.** All the data was pulled around the same time in 2007. We do know when a video was created, only the snapshot when it was pulled and how long a video is will determine how many views it gets. Also, how old the video is will determine how likely it is to be related to the parent. Too young and it's not going to be linked, and too old it may be considered non-relevant
+
+```{r}
 videos %>% 
-  ggplot(mapping = aes(x = rate, y = length)) + 
-  geom_point()
+  ggplot(mapping = aes(x = age, y = log(views))) + 
+  geom_point() + 
+  geom_smooth()
 
 ```
+
+> Data sampling approach has holes,
 
 # Linear Conditional Expectation
 
+```{r}
+df_lce <- 
+  videos %>% 
+  filter(!is.na(rate) & !is.na(length) & !is.na(views)) %>% 
+  select(length, rate) %>% 
+  mutate(residuals = fit$residuals, 
+         predicted = fit$fitted.values)
+```
+
+For this assumption to be met we expect to observe no trend (i.e., a horizontal line) when observing the scatter plot between the model's fitted values and its residuals.
+
+```{r, warning=FALSE}
+df_lce %>% 
+  ggplot(mapping = aes(x = predicted, y = residuals)) + 
+  geom_point() +
+  geom_smooth() + 
+  labs(title = 'Residuals vs. Predicted', 
+       x = 'Values Predicted by the Model', 
+       y = 'Model Residuals')
+
+```
+
+> This model is systematically overestimating the values at the higher end, with a dramatic rise and dip occurring in the mid-section. This means there is a conditional relationship between residuals and fitted values depending on where we are in the range of predicted values. Therefore, we observe some violation of the linear conditional expectation assumption.
+
+```{r}
+df_lce %>% 
+  ggplot(mapping = aes(x = rate, y = residuals)) + 
+  geom_point() +
+  geom_smooth() + 
+  labs(title = 'Residuals vs. Rate', 
+       x = 'Rate of the Video', 
+       y = 'Model Residuals')
+
+```
+
+> When plotting the residuals against the predictor **Rate**, we see the source of the dramatic rise and dip in the mid-section of the previous plot.
+
+```{r}
+df_lce %>% 
+  ggplot(mapping = aes(x = length, y = residuals)) + 
+  geom_point() +
+  geom_smooth() + 
+  labs(title = 'Residuals vs. Length', 
+       x = 'Length of the Video', 
+       y = 'Model Residuals')
+
+```
+
+> When plotting the residuals against the predictor **Length**, we see the source of the slow downward curve seen in the right-hand side of the residual vs. fitted plot.
+
+# No Perfect Colinearity
+
+For this assumption to be met we expect to find no evidence of a perfect linear relationship between our two predictor variables, **Rate** and **Length**.
+
+```{r, warning=FALSE}
+videos %>% 
+  ggplot(mapping = aes(x = length, y = rate)) + 
+  geom_point() +
+  geom_smooth() + 
+  labs(title = 'Rate vs. Length', 
+       x = 'Length of the Video', 
+       y = 'Rate of the Video')
+
+```
+
+> There is no perfect colinearty between the two predictors. There is not even a hint of near-perfect colinearity. Thus, this assumption is met.
 
 # Homoskedastic Errors
 
+For this assumption to be met we expect the variance of the residuals to be constant across the range of predicted values.
+
 ```{r}
-plot(fit, 1)
+df_lce %>% 
+  ggplot(mapping = aes(x = predicted, y = residuals)) + 
+  geom_point() +
+  labs(title = 'Residuals vs. Predicted', 
+       x = 'Values Predicted by the Model', 
+       y = 'Model Residuals')
+
 ```
 
+> Moving from left to right along the range of predicted values, we clearly see the variance span [-4, 4], then shift to [-2, 4], then grow to [-5, 5], and finish with [-4, 2]. These fluctuations in variance across the range of predicted values is a clear indication of heteroskedasticity. Therefore, the homoskedasticity assumption is not met
 
+The Breusch-Pagan test is another way to evaluate for the presence of heteroskedasticity.
+
+> Null hypothesis: no evidence for heteroskedastic error variance; rejecting the null means we have evidence of a problem
+
+```{r}
+library(lmtest)
+bptest(fit)
+
+```
+
+> We reject the null hypothesis - the evidence suggests we cannot rule out the presence of heteroskedasticity
 
 # Normally Distributed Errors
+
+For this assumption to be met we expect the residuals to be normally distributed
 
 ```{r}
 plot(fit, 2)
 
 ```
 
+> We see a residual distribution that is pretty faithful to the normal distribution. We conclude that this assumption is met.
