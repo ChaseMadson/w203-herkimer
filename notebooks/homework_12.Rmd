@@ -15,38 +15,51 @@ output:
     toc: true
 ---
 
-```{r Setup, include=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(stargazer)
+library(lmtest)
 
 ```
 
-```{r}
+```{r load_data, include=FALSE}
 videos <- 
   '../data/external/videos.txt' %>% 
   read_tsv(col_types = 'cciciidii')
 
 ```
 
--   views: the number of views by YouTube users.
--   rate: This is the average of the ratings that the video received. You may think of this as a proxy for video quality. (Notice that this is different from the variable ratings which is a count of the total number of ratings that a video has received.)
--   length: the duration of the video in seconds.
+   
 
-$ln(views)=\beta_0+\beta_1rate+\beta_2length$
+We are given a data set on YouTube videos and want to run the model $ln(\text{views}) = \beta_0 + \beta_1 \text{rate} + \beta_3 \text{length}$, where the variables mean the following:
 
-```{r}
-fit <-
-  lm(data = videos, 
-     formula = log(views) ~ rate + length)
+-   `views`: the number of views by YouTube users.
+-   `rate`: This is the average of the ratings that the video received. You may think of this as a proxy for video quality. (Notice that this is different from the variable ratings which is a count of the total number of ratings that a video has received.)
+-   `length`: the duration of the video in seconds.
 
-summary(fit)
+The resulting model is summarized as follows:
+
+```{r model_fit, results='asis', echo=FALSE}
+fit <- lm(data = videos, formula = log(views) ~ rate + length)
+
+stargazer(fit, 
+          header = FALSE, 
+          type = 'latex', 
+          title = 'Regressing Log-Views on Rate and Length', 
+          ci=TRUE, 
+          ci.level=0.95, 
+          single.row=TRUE, 
+          omit.stat=c('adj.rsq', 'ser'))
 
 ```
+
+\break
 
 # Evaluate the IID Assumption
 
 For this assumption to be met we expect the data to have been drawn from an independent and identically distributed sampling process. The unit of observation of this data set is a distinct YouTube video, and the creators of this sample of YouTube videos describe their sampling process as follows:
 
-> We consider all the YouTube videos to form a directed graph, where each video is a node in the graph. If a video *b* is in the related video list (first 20 only) of a video *a*, then there is a directed edge from *a* to *b* .... When processing each video, it checks the list of related videos and adds any new ones to the queue.[^1]
+> *We consider all the YouTube videos to form a directed graph, where each video is a node in the graph. If a video b is in the related video list (first 20 only) of a video a, then there is a directed edge from a to b .... When processing each video, it checks the list of related videos and adds any new ones to the queue.*[^1]
 
 [^1]: From *Dataset for "Statistics and Social Network of YouTube Videos"* <https://netsg.cs.sfu.ca/youtubedata/>
 
@@ -56,19 +69,22 @@ Moreover, the creators state that they began pulling their sample from an "initi
 
 -   **[Drop?] Age of a video determines views and relatedness.** All the data was pulled around the same time in 2007. We do know when a video was created, only the snapshot when it was pulled and how long a video is will determine how many views it gets. Also, how old the video is will determine how likely it is to be related to the parent. Too young and it's not going to be linked, and too old it may be considered non-relevant
 
-```{r}
-videos %>% 
+```{r iid_age, include=FALSE}
+videos %>%
+  filter(!is.na(age)) %>% 
   ggplot(mapping = aes(x = age, y = log(views))) + 
-  geom_point() + 
+  geom_point() +
   geom_smooth()
 
 ```
 
+\break
+
 > Data sampling approach has holes,
 
-# Linear Conditional Expectation
+# Linear Conditional Expectation Assumption
 
-```{r}
+```{r df_lce, include=FALSE}
 df_lce <- 
   videos %>% 
   filter(!is.na(rate) & !is.na(length) & !is.na(views)) %>% 
@@ -79,7 +95,7 @@ df_lce <-
 
 For this assumption to be met we expect to observe no trend (i.e., a horizontal line) when observing the scatter plot between the model's fitted values and its residuals.
 
-```{r, warning=FALSE}
+```{r lce_residual_fitted, include=FALSE}
 df_lce %>% 
   ggplot(mapping = aes(x = predicted, y = residuals)) + 
   geom_point() +
@@ -92,7 +108,7 @@ df_lce %>%
 
 > This model is systematically overestimating the values at the higher end, with a dramatic rise and dip occurring in the mid-section. This means there is a conditional relationship between residuals and fitted values depending on where we are in the range of predicted values. Therefore, we observe some violation of the linear conditional expectation assumption.
 
-```{r}
+```{r lce_residual_rate, include=FALSE}
 df_lce %>% 
   ggplot(mapping = aes(x = rate, y = residuals)) + 
   geom_point() +
@@ -105,7 +121,7 @@ df_lce %>%
 
 > When plotting the residuals against the predictor **Rate**, we see the source of the dramatic rise and dip in the mid-section of the previous plot.
 
-```{r}
+```{r lce_residual_length, include=FALSE}
 df_lce %>% 
   ggplot(mapping = aes(x = length, y = residuals)) + 
   geom_point() +
@@ -118,11 +134,13 @@ df_lce %>%
 
 > When plotting the residuals against the predictor **Length**, we see the source of the slow downward curve seen in the right-hand side of the residual vs. fitted plot.
 
-# No Perfect Colinearity
+\break
+
+# No Perfect Colinearity Assumption
 
 For this assumption to be met we expect to find no evidence of a perfect linear relationship between our two predictor variables, **Rate** and **Length**.
 
-```{r, warning=FALSE}
+```{r colinearity, include=FALSE}
 videos %>% 
   ggplot(mapping = aes(x = length, y = rate)) + 
   geom_point() +
@@ -135,11 +153,13 @@ videos %>%
 
 > There is no perfect colinearty between the two predictors. There is not even a hint of near-perfect colinearity. Thus, this assumption is met.
 
-# Homoskedastic Errors
+\break
+
+# Homoskedastic Errors Assumption
 
 For this assumption to be met we expect the variance of the residuals to be constant across the range of predicted values.
 
-```{r}
+```{r non_constant_variance, include=FALSE}
 df_lce %>% 
   ggplot(mapping = aes(x = predicted, y = residuals)) + 
   geom_point() +
@@ -155,21 +175,46 @@ The Breusch-Pagan test is another way to evaluate for the presence of heterosked
 
 > Null hypothesis: no evidence for heteroskedastic error variance; rejecting the null means we have evidence of a problem
 
-```{r}
-library(lmtest)
+```{r non_constant_variance_bptest}
 bptest(fit)
 
 ```
 
 > We reject the null hypothesis - the evidence suggests we cannot rule out the presence of heteroskedasticity
 
-# Normally Distributed Errors
+\break
 
-For this assumption to be met we expect the residuals to be normally distributed
+# Normally Distributed Errors Assumption
 
-```{r}
-plot(fit, 2)
+```{r df_normal_errors, include=FALSE}
+df_normal_errors <- 
+  videos %>% 
+  filter(!is.na(views) & !is.na(length) & !is.na(rate)) %>% 
+  mutate(residuals = fit$residuals) 
 
 ```
 
-> We see a residual distribution that is pretty faithful to the normal distribution. We conclude that this assumption is met.
+For this assumption to be met we expect the residuals to be normally distributed
+
+```{r normal_errors, include=FALSE}
+df_normal_errors %>% 
+  ggplot(mapping = aes(x = residuals)) + 
+  geom_histogram(aes(y = ..density..), bins = 50, fill = 'lightgrey', color = 'black') + 
+  stat_function(fun = dnorm, geom = 'line', size = 0.75, color = 'cornflowerblue', 
+                args = list(mean = mean(df_normal_errors$residuals), 
+                            sd = sd(df_normal_errors$residuals))) + 
+  labs(title = 'Distribution of Residuals vs. Theoretical Normal Distribution', 
+       y = 'Density', 
+       x = 'Residuals')
+
+df_normal_errors %>%
+  ggplot(mapping = aes(sample = residuals)) + 
+  stat_qq() + 
+  stat_qq_line() + 
+  labs(title = 'Normal Q-Q', 
+       y = 'Residuals', 
+       x = 'Theoretical Quantiles')
+  
+```
+
+> Based on the histogram and Q-Q plot, we see a residual distribution that is pretty faithful to the normal distribution. We conclude that this assumption is met.
