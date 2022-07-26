@@ -15,7 +15,7 @@ library(stargazer)
 library(lmtest)
 
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, 
-                      fig.width = 4, fig.height = 3, fig.align = 'center') 
+                      fig.width = 4, fig.height = 2.5, fig.align = 'center') 
 
 
 ```
@@ -65,7 +65,9 @@ By this description, we know that each video was selected due to its relation to
 
 Moreover, the creators state that they began pulling their sample from an "initial set of videos from the list of 'Recently Featured', 'Most Viewed', 'Top Rated', and 'Most Discussed'...", each one of these likely representing a cluster within the population of YouTube videos. This means the first subset of videos comes from one of these four clusters, and then subsequent data was pulled based on how closely related they were to this first subset. Therefore, we have major presence of clustering in our sample in contrast to the population, another violation of the IID assumption.
 
--   **[Drop?] Age of a video determines views and relatedness.** All the data was pulled around the same time in 2007. We do know when a video was created, only the snapshot when it was pulled and how long a video is will determine how many views it gets. Also, how old the video is will determine how likely it is to be related to the parent. Too young and it's not going to be linked, and too old it may be considered non-relevant
+When considering whether the observations of this data were drawn from an identical distribution, we cannot easily conclude that the population distribution is the same over time. The method of selecting data heavily relies on the initial set of videos, which comes from the snapshot data of 'Recently Featured', 'Most Viewed', 'Top Rated', and 'Most Discussed' in Feb 22nd 2007. There might be a trend of what people like to see or discuss in a certain period of time and would change in a different time period. Thus, there is a possibility that more than one population distribution presents at different times of selecting data. The “Butterfly effect” of using the initial set of videos will even amplify the data selection biases. 
+
+Finally, it is concerning to look at distribution of the `age` variable and see a complete absence of videos between 1 and 325 days old, which is likely a result of the "breadth-first" search algorithm. This tells us that the sampling approach has holes in it and does not resemble a simple random sample.
 
 ```{r iid_age, fig.cap = 'Unexplained Gap in Videos Aged between 1 and 325 Days Old', echo=FALSE}
 videos %>%
@@ -79,9 +81,7 @@ videos %>%
 
 ```
 
-> Data sampling approach has holes,
-
-**Conclusion: No, the assumption is *not* met.**
+**Conclusion: No, the IID assumption is *not* met.**
 
 \break
 
@@ -147,7 +147,7 @@ When plotting residuals vs. the predictor `length`, we see the source of the slo
 
 For this assumption to be met we expect to find no evidence of a perfect linear relationship between our two predictor variables, `rate` and `length`. To test for this, we plot these two predictors against each other.
 
-```{r colinearity, fig.cap = 'No Evidence of Colinearity of Predictors', echo=FALSE}
+```{r colinearity, fig.cap = 'No Evidence of Perfect Colinearity of Predictors', echo=FALSE}
 videos %>% 
   ggplot(mapping = aes(x = length, y = rate)) + 
   geom_point() +
